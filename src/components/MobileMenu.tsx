@@ -2,12 +2,26 @@ import { useState, useEffect } from "react";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ProductDetailView } from "./ProductDetailView";
+import rvC1Tourer from "@/assets/rv-c1-tourer.jpg";
+import rvC2Tourer from "@/assets/rv-c2-tourer.jpg";
+import rvShowroom from "@/assets/rv-showroom.jpg";
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price?: string;
+  image: string;
+  category: string;
+}
 
 interface MenuItem {
   id: string;
   label: string;
   hasSubmenu?: boolean;
   submenu?: MenuItem[];
+  products?: Product[];
 }
 
 interface MobileMenuProps {
@@ -15,17 +29,68 @@ interface MobileMenuProps {
   onClose: () => void;
 }
 
+const wohnmobileProducts: Product[] = [
+  {
+    id: "c1-tourer-edition",
+    name: "C1-TOURER EDITION +",
+    description: "LIGHTWEIGHT / COMFORT",
+    price: "ab 59.900€",
+    image: rvC1Tourer,
+    category: "vollintegriert"
+  },
+  {
+    id: "c2-tourer", 
+    name: "C2-TOURER",
+    description: "LIGHTWEIGHT / COMFORT",
+    price: "ab 65.900€",
+    image: rvC2Tourer,
+    category: "vollintegriert"
+  },
+  {
+    id: "chic-c-line",
+    name: "CHIC C-LINE",
+    description: "PREMIUM / STYLE",
+    price: "ab 89.900€",
+    image: rvC1Tourer,
+    category: "vollintegriert"
+  },
+  {
+    id: "chic-e-line",
+    name: "CHIC E-LINE", 
+    description: "LUXURY / COMFORT",
+    price: "ab 95.900€",
+    image: rvC2Tourer,
+    category: "vollintegriert"
+  },
+  {
+    id: "chic-s-plus",
+    name: "CHIC S-PLUS",
+    description: "SPACIOUS / LUXURY",
+    price: "ab 105.900€",
+    image: rvC1Tourer,
+    category: "vollintegriert"
+  },
+  {
+    id: "liner-for-two",
+    name: "LINER-FOR-TWO",
+    description: "COMPACT / ELEGANT",
+    price: "ab 125.900€",
+    image: rvC2Tourer,
+    category: "vollintegriert"
+  }
+];
+
 const menuItems: MenuItem[] = [
   {
     id: "wohnmobile",
     label: "Wohnmobile",
     hasSubmenu: true,
     submenu: [
-      { id: "wm-1", label: "Kompakte Wohnmobile" },
-      { id: "wm-2", label: "Teilintegrierte" },
-      { id: "wm-3", label: "Vollintegrierte" },
-      { id: "wm-4", label: "Alkoven" },
-    ]
+      { id: "alle-wohnmobile", label: "Alle Wohnmobile" },
+      { id: "vollintegrierte", label: "Vollintegrierte Wohnmobile" },
+      { id: "teilintegrierte", label: "Teilintegrierte Wohnmobile" },
+    ],
+    products: wohnmobileProducts
   },
   {
     id: "neuheiten",
@@ -83,6 +148,8 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const [currentLevel, setCurrentLevel] = useState<"main" | "submenu">("main");
   const [activeSubmenu, setActiveSubmenu] = useState<MenuItem | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showProductDetail, setShowProductDetail] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
 
   // Close menu when clicking outside or pressing escape
   useEffect(() => {
@@ -111,8 +178,22 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
       setCurrentLevel("main");
       setActiveSubmenu(null);
       setIsAnimating(false);
+      setShowProductDetail(false);
+      setSelectedProductId("");
     }
   }, [isOpen]);
+
+  const handleSubmenuClick = (subItemId: string) => {
+    if (subItemId === "vollintegrierte") {
+      setSelectedProductId("vollintegrierte");
+      setShowProductDetail(true);
+    }
+  };
+
+  const handleProductDetailBack = () => {
+    setShowProductDetail(false);
+    setSelectedProductId("");
+  };
 
   const handleSubmenuOpen = (menuItem: MenuItem) => {
     if (!menuItem.hasSubmenu) return;
@@ -212,7 +293,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
               currentLevel === "submenu" ? "translate-x-0" : "translate-x-full"
             )}
           >
-            <div className="h-full bg-menu-secondary">
+            <div className="h-full bg-menu-secondary overflow-y-auto">
               {/* Breadcrumb */}
               <div className="px-6 py-3 bg-muted/30">
                 <span className="text-sm text-muted-foreground">
@@ -220,36 +301,131 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                 </span>
               </div>
 
-              {/* Submenu Items */}
-              {activeSubmenu.submenu?.map((subItem, index) => (
-                <button
-                  key={subItem.id}
-                  className="w-full flex items-center px-6 py-4 text-left text-lg font-medium text-menu-secondary-foreground border-b border-border hover:bg-menu-secondary/80 transition-colors"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <span>{subItem.label}</span>
-                </button>
-              ))}
+              {/* Wohnmobile Content - Special Layout */}
+              {activeSubmenu.id === "wohnmobile" ? (
+                <div className="space-y-0">
+                   {/* Submenu Navigation */}
+                   {activeSubmenu.submenu?.map((subItem, index) => (
+                     <button
+                       key={subItem.id}
+                       className="w-full flex items-center px-6 py-4 text-left text-lg font-medium text-menu-secondary-foreground border-b border-border hover:bg-menu-secondary/80 transition-colors"
+                       style={{ animationDelay: `${index * 50}ms` }}
+                       onClick={() => handleSubmenuClick(subItem.id)}
+                     >
+                       <span>{subItem.label}</span>
+                     </button>
+                   ))}
 
-              {/* Additional Content Section */}
-              {activeSubmenu.id === "neuheiten" && (
-                <div className="px-6 py-6 border-t border-border bg-background">
-                  <h3 className="text-sm font-semibold text-foreground mb-2 uppercase tracking-wide">
-                    Händlersuche
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor 
-                    incididunt ut labore et dolore magna aliqua.
-                  </p>
-                  <Button variant="ghost" className="p-0 h-auto text-foreground font-medium">
-                    Händlersuche <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
+                  {/* Product Grid */}
+                  <div className="px-6 py-6 space-y-6">
+                    {activeSubmenu.products?.map((product) => (
+                      <div key={product.id} className="flex items-center space-x-4 bg-background rounded-lg p-4 shadow-sm">
+                        <div className="w-20 h-16 flex-shrink-0">
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-full h-full object-cover rounded"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground text-sm">
+                            {product.name}
+                          </h3>
+                          {product.price && (
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-xs font-medium text-foreground">
+                                {product.price}
+                              </span>
+                              <span className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded">
+                                €
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {product.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Additional Categories */}
+                  <div className="border-t border-border bg-muted/20">
+                    <div className="px-6 py-4">
+                      <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">
+                        Weitere Kategorien
+                      </h3>
+                      <div className="space-y-2">
+                        {[
+                          "Übersicht Vollintegrierte Wohnmobile",
+                          "Übersicht Teilintegriert Wohnmobile", 
+                          "Händlersuche / Fahrzeugsuche",
+                          "Probefahrt",
+                          "Modellberater",
+                          "Chassis-Auswahl"
+                        ].map((item, index) => (
+                          <button
+                            key={index}
+                            className="block w-full text-left text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              ) : (
+                /* Regular Submenu Content */
+                <>
+                  {/* Submenu Items */}
+                  {activeSubmenu.submenu?.map((subItem, index) => (
+                    <button
+                      key={subItem.id}
+                      className="w-full flex items-center px-6 py-4 text-left text-lg font-medium text-menu-secondary-foreground border-b border-border hover:bg-menu-secondary/80 transition-colors"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <span>{subItem.label}</span>
+                    </button>
+                  ))}
+
+                  {/* Additional Content Section for Neuheiten */}
+                  {activeSubmenu.id === "neuheiten" && (
+                    <div className="px-6 py-6 border-t border-border bg-background">
+                      <h3 className="text-sm font-semibold text-foreground mb-2 uppercase tracking-wide">
+                        Händlersuche
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor 
+                        incididunt ut labore et dolore magna aliqua.
+                      </p>
+                      <Button variant="ghost" className="p-0 h-auto text-foreground font-medium">
+                        Händlersuche <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                      
+                      {/* Feature Image */}
+                      <div className="mt-6">
+                        <img 
+                          src={rvShowroom} 
+                          alt="Carthago Showroom"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Product Detail View - Third Level */}
+      <ProductDetailView
+        isOpen={showProductDetail}
+        onBack={handleProductDetailBack}
+        productId={selectedProductId}
+      />
     </div>
   );
 };
